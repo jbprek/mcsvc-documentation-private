@@ -1,0 +1,36 @@
+version: '3'
+services:
+  gogs:
+    container_name: gogs
+    image: gogs/gogs:latest
+    ports:
+      - '3000:3000'
+      - '10022:22'
+    volumes:
+      - gogs-data:/data
+  mcsvc-infra-eureka-service:
+    container_name: mcsvc-infra-eureka-service
+    image: jbprek/mcsvc-infra-eureka-service:latest
+    ports:
+      - '8761:8761'
+      - '18761:18761'
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME:mcsvc-infra-eureka-service
+  mcsvc-infra-config-service:
+    container_name: mcsvc-infra-config-service
+    image: jbprek/mcsvc-infra-config-service:latest
+    depends_on:
+     - gogs
+     - mcsvc-infra-eureka-service
+    ports:
+     - '8888:8888'
+     - '18888:18888'
+    environment:
+     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://mcsvc-infra-eureka-service:8761/eureka
+     - SPRING_CLOUD_CONFIG_SERVER_URI:http://gogs:3000/john/mcsvc-infra-config-service-repository.git
+     - SPRING_CLOUD_CONFIG_SERVER_USERNAME:john
+     - SPRING_CLOUD_CONFIG_SERVER_PASSWORD:dada
+volumes:
+  gogs-data:
+    external: true
+
